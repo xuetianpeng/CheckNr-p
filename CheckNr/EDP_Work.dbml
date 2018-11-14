@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="EDP_WORK" Class="EDP_WorkDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Connection Mode="AppSettings" ConnectionString="Data Source=116.62.142.105;Initial Catalog=EDP_WORK;Persist Security Info=True;User ID=sa" SettingsObjectName="CheckNr.Properties.Settings" SettingsPropertyName="EDP_WORKConnectionString" Provider="System.Data.SqlClient" />
+  <Table Name="dbo.T_CheckNr" Member="T_CheckNr">
+    <Type Name="T_CheckNr">
+      <Column Name="S_ID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="S_Name" Type="System.String" DbType="VarChar(50)" CanBeNull="true" />
+      <Column Name="LastTime" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="LastMsg" Type="System.String" DbType="Text" CanBeNull="true" UpdateCheck="Never" />
+      <Column Name="LastImage" Type="System.Data.Linq.Binary" DbType="Image" CanBeNull="true" UpdateCheck="Never" />
+    </Type>
+  </Table>
+</Database>

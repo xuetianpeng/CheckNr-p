@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 11, 8.5" name="EDPToolBox">
+  <DataContextMoniker Name="/EDPToolBoxDataContext" />
+  <nestedChildShapes>
+    <classShape Id="5efa6251-f7ca-48b8-a834-3e425a62f9b1" absoluteBounds="3.625, 1.75, 2, 1.7220992024739581">
+      <DataClassMoniker Name="/EDPToolBoxDataContext/T_CheckNr" />
+      <nestedChildShapes>
+        <elementListCompartment Id="77de5cde-5cad-4a9b-a07b-90fd4179150a" absoluteBounds="3.64, 2.21, 1.9700000000000002, 1.1620992024739583" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+  </nestedChildShapes>
+</ordesignerObjectsDiagram>

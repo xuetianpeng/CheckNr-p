@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <appSettings>
+    <jt key="jtbfpath" value=""/>
+    <st key="ST" value="16"/>
+    <zc key ="zctime" value ="30000"/>
+    <gz key ="gztime" value ="6000"/>
+    <su key ="snpath" value =""/>
+    <ph key="admin" value="18626000150"/>
+    <rb key="dd" value ="https://oapi.dingtalk.com/robot/send?access_token=8e03a1889da305b506dcfcf70f3f5b82f273a56c71d10e2277a1d434a4a8d2bc"/>
+    <fd key="fddd" value="https://oapi.dingtalk.com/robot/send?access_token=62da4d0da02c6fd5ceba79326d65cd421dd84df2765df9854268477124f13295"/>
+  </appSettings>
+  <Check>
+    <PC>
+      <add key="ST16" value ="172.16.16.1"/>
+      <add key="BK16" value ="172.16.16.2"/>
+      <add key="ED01" value ="172.16.16.11"/>
+      <add key="WS01" value ="172.16.16.8"/>
+      <add key="WS02" value ="10.32.244.3"/>
+      <add key="FW01" value ="10.32.240.1"/>
+      <add key="FW02" value ="10.32.240.5"/>
+      <add key="XTPS" value ="116.62.142.105"/>
+    </PC>
+    <Machine>
+      <add key="Dns" value ="10.201.128.1"/>
+    </Machine>
+    <Url>
+      <add key="email" value ="172.16.0.211"/>
+    </Url>
+  </Check>
+</configuration>

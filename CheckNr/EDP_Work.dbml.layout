@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 11, 8.5" name="EDP_Work">
+  <DataContextMoniker Name="/EDP_WorkDataContext" />
+  <nestedChildShapes>
+    <classShape Id="aca5326b-d7cf-405b-83cd-06ab4d9c31ab" absoluteBounds="3.5, 2, 2, 1.7220992024739581">
+      <DataClassMoniker Name="/EDP_WorkDataContext/T_CheckNr" />
+      <nestedChildShapes>
+        <elementListCompartment Id="7f92554a-be48-45c9-ad4b-51dda4dd6a95" absoluteBounds="3.515, 2.46, 1.9700000000000002, 1.1620992024739583" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+  </nestedChildShapes>
+</ordesignerObjectsDiagram>

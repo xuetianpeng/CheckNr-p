@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="EDPToolBox" Class="EDPToolBoxDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Connection Mode="AppSettings" ConnectionString="Data Source=116.62.142.105;Initial Catalog=EDPToolBox;Persist Security Info=True;User ID=sa" SettingsObjectName="CheckNr.Properties.Settings" SettingsPropertyName="EDPToolBoxConnectionString1" Provider="System.Data.SqlClient" />
+  <Table Name="dbo.T_CheckNr" Member="T_CheckNr">
+    <Type Name="T_CheckNr">
+      <Column Name="STID" Type="System.String" DbType="VarChar(50) NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="STName" Type="System.String" DbType="VarChar(100) NOT NULL" CanBeNull="false" />
+      <Column Name="Pw" Type="System.String" DbType="VarChar(100) NOT NULL" CanBeNull="false" />
+      <Column Name="LastTime" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="LastMsg" Type="System.String" DbType="Text" CanBeNull="true" UpdateCheck="Never" />
+    </Type>
+  </Table>
+</Database>
