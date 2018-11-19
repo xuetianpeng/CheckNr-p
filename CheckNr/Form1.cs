@@ -60,9 +60,10 @@ namespace CheckNr
         static bool n8, n12, n16, n20;
         static bool j8, j20;
         int zctime, gztime;
-        DateTime lastddtime;
-        static DateTime lastpcddtime;
-        string dd;
+        static DateTime lastddtime = DateTime.Now, lastpcddtime = DateTime.Now;
+        DateTime lastsntime;
+        static string lastdd = "", lastpcdd = "";
+        static string dd, fddd;
         static string ph;
         int dded = 0;
         /// <summary>
@@ -86,15 +87,16 @@ namespace CheckNr
             zctime = Convert.ToInt32(node.SelectSingleNode("zc").Attributes["value"].Value);
             gztime = Convert.ToInt32(node.SelectSingleNode("gz").Attributes["value"].Value);
             dd = node.SelectSingleNode("rb").Attributes["value"].Value;
+            fddd = node.SelectSingleNode("fd").Attributes["value"].Value;
             ph = node.SelectSingleNode("ph").Attributes["value"].Value;
             if (snpath == "")
             {
                 if (MessageBox.Show("未发现苏宁路径的配置文件，请选择路径后保存", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
                 {
                     folderBrowserDialog1.ShowDialog();
-                    ((XmlElement)node.SelectSingleNode("sn")).SetAttribute("value", folderBrowserDialog1.SelectedPath);
+                    ((XmlElement)node.SelectSingleNode("su")).SetAttribute("value", folderBrowserDialog1.SelectedPath);
                     xml.Save("config.xml");
-                    path = folderBrowserDialog1.SelectedPath;
+                    snpath = folderBrowserDialog1.SelectedPath;
                 }
                 else
                 {
@@ -137,6 +139,7 @@ namespace CheckNr
         private void Form1_Load(object sender, EventArgs e)
         {
             n8 = n12 = n16 = n20 = j8 = j20 = false;
+            nr = jt = false;
             GetAllFileInfo();
             GetPingIP();
             CED();
@@ -165,6 +168,7 @@ namespace CheckNr
             toolStripStatusLabel3.BackColor = jt ? Color.Green : Color.Red;
             toolStripStatusLabel4.BackColor = pc ? Color.Green : Color.Red;
         }
+
         //需要异步
         void GetPingIP()
         {
@@ -209,15 +213,24 @@ namespace CheckNr
             }
 
         }
+
         //需要异步
         void CED() 
         {
             bool nr = System.IO.Directory.Exists(@"\\172.16."+ST+@".10\nr");
+            string s = "";
             if (!nr)
             {
                 label4.ForeColor = Color.Red;
-                label4.Text = "NR共享文件夹不可用，请检查！！！！";
+                s = label4.Text = "NR共享文件夹不可用，请检查！！！！";
                 ed = false;
+                lastdd = s;
+                string paraUrlCoded = "{\"msgtype\":\"text\",\"text\":{\"content\":\"";
+                paraUrlCoded += "NR共享文件夹不可用，请检查！！！！";
+                paraUrlCoded += "\"},\"at\":{\"atMobiles\":[\"";
+                paraUrlCoded += ph;
+                paraUrlCoded += "\"],\"isAtAll\": false} }";
+                Post(paraUrlCoded);
             }
             else
             {
@@ -226,268 +239,126 @@ namespace CheckNr
                 ed = true;
             }
         }
+
         //需要异步
         void CheckNRFile() 
         {
-            label5.Text = label6.Text = label7.Text = label8.Text = label9.Text = label10.Text = "";
+            //label5.Text = label6.Text = label7.Text = label8.Text = label9.Text = label10.Text = "";
             DateTime x = DateTime.Now;
+            if (x.Hour < 8)
+            {
+                label5.Text = label6.Text = label7.Text = label8.Text = label9.Text = label10.Text = "";
+                nr = jt = true;
+            }
+            else
+            {
+                nr = jt = false;
+            }
             if (x.Hour >= 8)
             {
                 //8点钟
-                bool n8 = ExFile(@"\\172.16."+ST+@".10\nr\" + GetWeekInt( DateTime.Now.DayOfWeek).ToString()+@"\", DateTime.Now.ToString("expyyMMdd") + "08", ".dump.gz");
-                if (x.Hour == 8)
+                if (x.Hour == 8 && x.Minute <= 30)
                 {
-                    //超过8点半
-                    if (x.Minute > 30)
-                    {
-                        //备份文件已经存在
-                        if (n8)
-                        {
-                            label7.ForeColor = Color.Black;
-                            label7.Text = "8点备份正常。" + FileDX;
-                            //截图文件是否存在
-                            bool j8 = ExFile(path + @"\" + DateTime.Now.ToString("yyyy") + @"\" + DateTime.Now.ToString("MM") + @"\", DateTime.Now.ToString("yyyyMMdd"), "-1.jpg");
-                            //已存在
-                            if (j8)
-                            {
-                                label5.ForeColor = Color.Black;
-                                label5.Text = "8点截图已保存。";
-                                jt = true;
-                            }
-                                //不存在
-                            else
-                            {
-                                label5.ForeColor = Color.Red;
-                                label5.Text = "8点截图未保存";
-                                jt = false;
-                            }
-                            nr = true;
-                        }
-                            //备份文件不存在
-                        else
-                        {
-                            label7.ForeColor = Color.Red;
-                            label7.Text = "8点备份异常，请检查。";
-                            nr = false;
-                        }
-                    }
+
                 }
-                    //9.10.11点
                 else
                 {
-                    //备份文件存在
+                    if (!n8)
+                    {
+                        n8 = ExFile(@"\\172.16." + ST + @".10\nr\" + GetWeekInt(DateTime.Now.DayOfWeek).ToString() + @"\", DateTime.Now.ToString("expyyMMdd") + "08", ".dump.gz");
+                        SetN(8, n8);
+                    }
+                    if (!j8)
+                    {
+                        j8 = ExFile(path + @"\" + DateTime.Now.ToString("yyyy") + @"\" + DateTime.Now.ToString("MM") + @"\", DateTime.Now.ToString("yyyyMMdd"), "-1.jpg");
+                        SetJ(8, j8);
+                    }
                     if (n8)
                     {
-                        label7.ForeColor = Color.Black;
-                        label7.Text = "8点备份正常。" + FileDX;
-                        bool j8 = ExFile(path + @"\" + DateTime.Now.ToString("yyyy") + @"\" + DateTime.Now.ToString("MM") + @"\", DateTime.Now.ToString("yyyyMMdd"), "-1.jpg");
-                        //截图文件存在
-                        if (j8)
-                        {
-                            label5.ForeColor = Color.Black;
-                            label5.Text = "8点截图已保存。";
-                            jt = true;
-                        }
-                            //截图文件不存在
-                        else
-                        {
-                            label5.ForeColor = Color.Red;
-                            label5.Text = "8点截图未保存";
-                            jt = false;
-                        }
+                        nr = true;
                     }
-                        //备份文件不存在
-                    else
+                    if (j8)
                     {
-                        label7.ForeColor = Color.Red;
-                        label7.Text = "8点备份异常，请检查。";
-                        bool j8 = ExFile(path + @"\" + DateTime.Now.ToString("yyyy") + @"\" + DateTime.Now.ToString("MM") + @"\", DateTime.Now.ToString("yyyyMMdd"), "-1.jpg");
-                        //截图文件存在
-                        if (j8)
-                        {
-                            label5.ForeColor = Color.Black;
-                            label5.Text = "8点截图已保存。";
-                            jt = true;
-                        }
-                        //截图文件不存在
-                        else
-                        {
-                            label5.ForeColor = Color.Red;
-                            label5.Text = "8点截图未保存";
-                            jt = false;
-                        }
-                        nr = false;
+                        jt = true;
                     }
                 }
-
             }
             if (x.Hour >= 12)
             {
-                label9.Text = label10.Text = "";
-                bool n12 = ExFile(@"\\172.16."+ST+@".10\nr\" + GetWeekInt(DateTime.Now.DayOfWeek).ToString() + @"\", DateTime.Now.ToString("expyyMMdd") + "12", ".dump.gz");
-                if (x.Hour == 12)
+                if (x.Hour == 12 && x.Minute <= 30)
                 {
-                    if (x.Minute > 30)
-                    {
-                        
-                        if (n12)
-                        {
-                            label8.ForeColor = Color.Black;
-                            label8.Text = "12点备份正常。" + FileDX;
-                            nr = true;
-                        }
-                        else
-                        {
-                            label8.ForeColor = Color.Red;
-                            label8.Text = "12点备份异常，请检查。";
-                            nr = false;
-                        }
-                    }
+                    
                 }
                 else
                 {
-                    if (n12)
+                    if (!n12)
                     {
-                        label8.ForeColor = Color.Black;
-                        label8.Text = "12点备份正常。" + FileDX;
+                        n12 = ExFile(@"\\172.16." + ST + @".10\nr\" + GetWeekInt(DateTime.Now.DayOfWeek).ToString() + @"\", DateTime.Now.ToString("expyyMMdd") + "12", ".dump.gz");
+                        SetN(12, n12);
+                    }
+                    if (n8 && n12)
+                    {
                         nr = true;
                     }
-                    else
+                    if (j8)
                     {
-                        label8.ForeColor = Color.Red;
-                        label8.Text = "12点备份异常，请检查。";
-                        nr = false;
+                        jt = true;
                     }
                 }
             }
             if (x.Hour >= 16)
             {
-                label10.Text = "";
-                bool n16 = ExFile(@"\\172.16."+ST+@".10\nr\" + GetWeekInt(DateTime.Now.DayOfWeek).ToString() + @"\", DateTime.Now.ToString("expyyMMdd") + "16", ".dump.gz");
-                if (x.Hour == 16)
+                if (x.Hour == 16 && x.Minute <= 30)
                 {
-                    if (x.Minute > 30)
-                    {
-                        if (n16)
-                        {
-                            label9.ForeColor = Color.Black;
-                            label9.Text = "16点备份正常。" + FileDX;
-                            nr = true;
-                        }
-                        else
-                        {
-                            label9.ForeColor = Color.Red;
-                            label9.Text = "16点备份异常，请检查。";
-                            nr = false;
-                        }
-                    }
+
                 }
                 else
                 {
-                    if (n16)
+                    if (!n16)
                     {
-                        label9.ForeColor = Color.Black;
-                        label9.Text = "16点备份正常。" + FileDX;
+                        n16 = ExFile(@"\\172.16." + ST + @".10\nr\" + GetWeekInt(DateTime.Now.DayOfWeek).ToString() + @"\", DateTime.Now.ToString("expyyMMdd") + "16", ".dump.gz");
+                        SetN(16, n16);
+                    }
+                    if (n8 && n12 && n16)
+                    {
                         nr = true;
                     }
-                    else
+                    if (j8)
                     {
-                        label9.ForeColor = Color.Red;
-                        label9.Text = "16点备份异常，请检查。";
-                        nr = false;
+                        jt = true;
                     }
                 }
             }
             if (x.Hour >= 20)
             {
-                
-                bool n20 = ExFile(@"\\172.16."+ST+@".10\nr\" + GetWeekInt(DateTime.Now.DayOfWeek).ToString() + @"\", DateTime.Now.ToString("expyyMMdd") + "20", ".dump.gz");
-                if (x.Hour == 20)
+                if (x.Hour == 20 && x.Minute <= 30)
                 {
-                    if (x.Minute > 30)
-                    {
-                        
-                        if (n20)
-                        {
-                            label10.ForeColor = Color.Black;
-                            label10.Text = "20点备份正常。" + FileDX;
-                            bool j8 = ExFile(path + @"\" + DateTime.Now.ToString("yyyy") + @"\" + DateTime.Now.ToString("MM") + @"\", DateTime.Now.ToString("yyyyMMdd"), "-2.jpg");
-                            if (j8)
-                            {
-                                label6.ForeColor = Color.Black;
-                                label6.Text = "20点截图已保存。";
-                                jt = true;
-                            }
-                            else
-                            {
-                                label6.ForeColor = Color.Red;
-                                label6.Text = "20点截图未保存";
-                                jt = false;
-                            }
-                            nr = true;
-                        }
-                        else
-                        {
-                            label10.ForeColor = Color.Red;
-                            label10.Text = "20点备份异常，请检查。";
-                            nr = false;
-                        }
-                    }
+
                 }
                 else
                 {
-                    if (n20)
+                    if (!n20)
                     {
-                        label10.ForeColor = Color.Black;
-                        label10.Text = "20点备份正常。" + FileDX;
-                        bool j8 = ExFile(path + @"\" + DateTime.Now.ToString("yyyy") + @"\" + DateTime.Now.ToString("MM") + @"\", DateTime.Now.ToString("yyyyMMdd"), "-2.jpg");
-                        if (j8)
-                        {
-                            label6.ForeColor = Color.Black;
-                            label6.Text = "20点截图已保存。";
-                            jt = true;
-                        }
-                        else
-                        {
-                            label6.ForeColor = Color.Red;
-                            label6.Text = "20点截图未保存";
-                            jt = false;
-                        }
+                        n20 = ExFile(@"\\172.16." + ST + @".10\nr\" + GetWeekInt(DateTime.Now.DayOfWeek).ToString() + @"\", DateTime.Now.ToString("expyyMMdd") + "20", ".dump.gz");
+                        SetN(20, n20);
+                    }
+                    if (!j20)
+                    {
+                        j20 = ExFile(path + @"\" + DateTime.Now.ToString("yyyy") + @"\" + DateTime.Now.ToString("MM") + @"\", DateTime.Now.ToString("yyyyMMdd"), "-2.jpg");
+                        SetJ(20, j20);
+                    }
+                    if (n8 && n12 && n16 && n20)
+                    {
                         nr = true;
                     }
-                    else
+                    if (j8 && j20)
                     {
-                        label10.ForeColor = Color.Red;
-                        label10.Text = "20点备份异常，请检查。";
-                        bool j8 = ExFile(path + @"\" + DateTime.Now.ToString("yyyy") + @"\" + DateTime.Now.ToString("MM") + @"\", DateTime.Now.ToString("yyyyMMdd"), "-2.jpg");
-                        if (j8)
-                        {
-                            label6.ForeColor = Color.Black;
-                            label6.Text = "20点截图已保存。";
-                            jt = true;
-                        }
-                        else
-                        {
-                            label6.ForeColor = Color.Red;
-                            label6.Text = "20点截图未保存";
-                            jt = false;
-                        }
-                        nr = true;
-                        nr = false;
+                        jt = true;
                     }
                 }
-
-            }
-            if (x.Hour < 8)
-            {
-                label5.Text = label6.Text = label7.Text = label8.Text = label9.Text = label10.Text = "";
             }
         }
 
-        void CheckNRFilea()
-        {                 
-
-        }
         //需要异步
         void CheckPC() 
         {
@@ -530,37 +401,40 @@ namespace CheckNr
             }
             else
             {
-                if (lastpcddtime != null)
+                if (lastpcddtime != null && lastpcdd != "")
                 {
-                    if ((DateTime.Now - lastpcddtime).Hours > 1)
+                    if ((DateTime.Now - lastpcddtime).Hours < 1 && lastpcdd == IP)
                     {
+                        return false;
+                    }
+                    else
+                    {
+                        lastpcdd = IP;
                         string paraUrlCoded = "{\"msgtype\":\"text\",\"text\":{\"content\":\"";
                         paraUrlCoded += "IP:" + IP + "网络不通,请检查。";
                         paraUrlCoded += "\"},\"at\":{\"atMobiles\":[\"";
                         paraUrlCoded += ph;
                         paraUrlCoded += "\"],\"isAtAll\": false} }";
-                        //textBox4.Text = paraUrlCoded;
+                        ////textBox4.Text = paraUrlCoded;
                         Post(paraUrlCoded);
-                        return false;
-                    }
-                    else
-                    {
                         return false;
                     }
                 }
                 else
                 {
+                    lastpcdd = IP;
                     string paraUrlCoded = "{\"msgtype\":\"text\",\"text\":{\"content\":\"";
                     paraUrlCoded += "IP:" + IP + "网络不通,请检查。";
                     paraUrlCoded += "\"},\"at\":{\"atMobiles\":[\"";
                     paraUrlCoded += ph;
                     paraUrlCoded += "\"],\"isAtAll\": false} }";
-                    //textBox4.Text = paraUrlCoded;
+                    ////textBox4.Text = paraUrlCoded;
                     Post(paraUrlCoded);
                     return false;
                 }
             }
         }
+
         //需要异步
         bool UpdateImage()
         {
@@ -600,12 +474,75 @@ namespace CheckNr
 
         private void timer2_Tick(object sender, EventArgs e)
         {
-            
+            DateTime x = DateTime.Now;
+            if (x.Hour >= 22)
+            {
+                string s = snpath + @"\logs\recallLog_" + x.ToString("yyyy-MM-dd") + @".txt";
+                if (File.Exists(s))
+                {
+                    FileInfo fi = new FileInfo(snpath + @"\logs\recallLog_" + x.ToString("yyyy-MM-dd") + @".txt");
+                    if (fi.LastAccessTime.Hour < 22)
+                    {
+                        if (lastsntime == null)
+                        {
+                            lastsntime = DateTime.Now;
+                            //OpenSuning();
+                            string paraUrlCoded = "{\"msgtype\":\"text\",\"text\":{\"content\":\"";
+                            paraUrlCoded += "苏宁接口尚未检查,请立即打开重调工具检查。";
+                            paraUrlCoded += "\"},\"at\":{\"atMobiles\":[\"";
+                            paraUrlCoded += ph;
+                            paraUrlCoded += "\"],\"isAtAll\": true} }";
+                            ////textBox4.Text = paraUrlCoded;
+                            Postnb(paraUrlCoded);
+                        }
+                        else
+                        {
+                            if ((DateTime.Now - lastsntime).Hours > 1)
+                            {
+                                lastsntime = DateTime.Now;
+                                string paraUrlCoded = "{\"msgtype\":\"text\",\"text\":{\"content\":\"";
+                                paraUrlCoded += "苏宁接口尚未检查,请立即打开重调工具检查。";
+                                paraUrlCoded += "\"},\"at\":{\"atMobiles\":[\"";
+                                paraUrlCoded += ph;
+                                paraUrlCoded += "\"],\"isAtAll\": true} }";
+                                ////textBox4.Text = paraUrlCoded;
+                                Postnb(paraUrlCoded);
+                                //OpenSuning();
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        lastsntime = DateTime.Now;
+                        string paraUrlCoded = "{\"msgtype\":\"text\",\"text\":{\"content\":\"";
+                        paraUrlCoded += "苏宁接口尚未检查,请立即打开重调工具检查。";
+                        paraUrlCoded += "\"},\"at\":{\"atMobiles\":[\"";
+                        paraUrlCoded += ph;
+                        paraUrlCoded += "\"],\"isAtAll\": true} }";
+                        ////textBox4.Text = paraUrlCoded;
+                        Postnb(paraUrlCoded);
+                        //OpenSuning();
+                    }
+                }
+                else
+                {
+                    lastsntime = DateTime.Now;
+                    string paraUrlCoded = "{\"msgtype\":\"text\",\"text\":{\"content\":\"";
+                    paraUrlCoded += "苏宁接口尚未检查,请立即打开重调工具检查。";
+                    paraUrlCoded += "\"},\"at\":{\"atMobiles\":[\"";
+                    paraUrlCoded += ph;
+                    paraUrlCoded += "\"],\"isAtAll\": true} }";
+                    ////textBox4.Text = paraUrlCoded;
+                    Postnb(paraUrlCoded);
+                    //OpenSuning();
+                }
+            }
         }
 
         private static void Post(string paraUrlCoded)
         {
-            string url = @"https://oapi.dingtalk.com/robot/send?access_token=8e03a1889da305b506dcfcf70f3f5b82f273a56c71d10e2277a1d434a4a8d2bc";
+            string url = dd;//@"https://oapi.dingtalk.com/robot/send?access_token=8e03a1889da305b506dcfcf70f3f5b82f273a56c71d10e2277a1d434a4a8d2bc";
             string strURL = url;
             System.Net.HttpWebRequest request;
             request = (System.Net.HttpWebRequest)WebRequest.Create(strURL);
@@ -656,6 +593,58 @@ namespace CheckNr
             // MessageBox.Show(strValue);
         }
 
+        private static void Postnb(string paraUrlCoded)
+        {
+            string url = fddd; //@"https://oapi.dingtalk.com/robot/send?access_token=8e03a1889da305b506dcfcf70f3f5b82f273a56c71d10e2277a1d434a4a8d2bc";
+            string strURL = url;
+            System.Net.HttpWebRequest request;
+            request = (System.Net.HttpWebRequest)WebRequest.Create(strURL);
+            request.Method = "POST";
+
+            //判断是否必要性
+            request.ContentType = "application/json;charset=UTF-8";
+            //request.ContentType = "application/json;";
+
+
+            //添加cookie测试
+            //Uri uri = new Uri(url);
+            //Cookie cookie = new Cookie("Name", DateTime.Now.ToString()); // 设置key、value形式的Cookie
+            //CookieContainer cookies = new CookieContainer();
+            //cookies.Add(uri, cookie);
+            //request.CookieContainer = cookies;
+
+            //发送请求的另外形式
+            //request.Method = "POST";
+            //request.ContentType = "application/x-www-form-urlencoded";
+
+            byte[] payload;
+            payload = System.Text.Encoding.UTF8.GetBytes(paraUrlCoded);
+            request.ContentLength = payload.Length;
+            Stream writer = request.GetRequestStream();
+            writer.Write(payload, 0, payload.Length);
+            writer.Close();
+
+
+            System.Net.HttpWebResponse response;
+            response = (System.Net.HttpWebResponse)request.GetResponse();
+            System.IO.Stream s;
+            s = response.GetResponseStream();
+            string StrDate = "";
+            string strValue = "";
+            StreamReader Reader = new StreamReader(s, Encoding.UTF8);
+            while ((StrDate = Reader.ReadLine()) != null)
+            {
+                strValue += StrDate + "\r\n";
+            }
+
+            //添加关闭相应
+            Reader.Close();
+            response.Close();
+
+            //改变返回结果形式以看全部提示
+            //label3.Text = strValue;
+            // MessageBox.Show(strValue);
+        }
         public static byte[] Bitmap2Byte(Bitmap bitmap)
         {
             using (MemoryStream stream = new MemoryStream())
@@ -667,6 +656,7 @@ namespace CheckNr
                 return data;
             }
         }
+
        //检测文件大小
         bool ExFile(string paths, string startstr, string endstr) 
         {
@@ -685,6 +675,7 @@ namespace CheckNr
             }
             return false;
         }
+
         //转换日期
         int GetWeekInt(DayOfWeek dw) 
         {
@@ -706,6 +697,7 @@ namespace CheckNr
                     return 0;
             }
         }
+
         void OpenSuning()
         {
             if (DateTime.Now.Hour == 22)
@@ -718,7 +710,146 @@ namespace CheckNr
             }
         }
 
+        void SetN(int N, bool sucess)
+        {
+            string s = "";
+            if (sucess)
+            {
+                switch (N)
+                {
+                    case 8:
+                        label7.ForeColor = Color.Black;
+                        s = label7.Text = "8点备份正常。" + FileDX;
+                        break;
+                    case 12:
+                        label8.ForeColor = Color.Black;
+                        s = label8.Text = "12点备份正常。" + FileDX;
+                        break;
+                    case 16:
+                        label9.ForeColor = Color.Black;
+                        s = label9.Text = "16点备份正常。" + FileDX;
+                        break;
+                    case 20:
+                        label10.ForeColor = Color.Black;
+                        s = label10.Text = "20点备份正常。" + FileDX;
+                        break;
+                }
+            }
+            else
+            {
+                switch (N)
+                {
+                    case 8:
+                        label7.ForeColor = Color.Red;
+                        s = label7.Text = "8点备份异常，请检查。";
+                        break;
+                    case 12:
+                        label8.ForeColor = Color.Red;
+                        s = label8.Text = "12点备份异常，请检查。";
+                        break;
+                    case 16:
+                        label9.ForeColor = Color.Red;
+                        s = label9.Text = "12点备份异常，请检查。";
+                        break;
+                    case 20:
+                        label10.ForeColor = Color.Red;
+                        s = label10.Text = "20点备份异常，请检查。";
+                        break;
+                }
+                if (lastddtime != null && lastdd != "")
+                {
+                    if ((DateTime.Now - lastddtime).Hours < 1 && lastdd == s)
+                    {
 
+                    }
+                    else
+                    {
+                        lastdd = s;
+                        string paraUrlCoded = "{\"msgtype\":\"text\",\"text\":{\"content\":\"";
+                        paraUrlCoded += Convert.ToString(N) + "点备份失败,请检查。";
+                        paraUrlCoded += "\"},\"at\":{\"atMobiles\":[\"";
+                        paraUrlCoded += ph;
+                        paraUrlCoded += "\"],\"isAtAll\": false} }";
+                        //textBox4.Text = paraUrlCoded;
+                        Post(paraUrlCoded);
+                    }
+                }
+                else
+                {
+                    lastdd = s;
+                    string paraUrlCoded = "{\"msgtype\":\"text\",\"text\":{\"content\":\"";
+                    paraUrlCoded += Convert.ToString(N) + "点备份失败,请检查。";
+                    paraUrlCoded += "\"},\"at\":{\"atMobiles\":[\"";
+                    paraUrlCoded += ph;
+                    paraUrlCoded += "\"],\"isAtAll\": false} }";
+                    //textBox4.Text = paraUrlCoded;
+                    Post(paraUrlCoded);
+                }
+                
+            }
+        }
+
+        void SetJ(int J, bool sucess)
+        {
+            string s = "";
+            if (sucess)
+            {
+                switch (J)
+                {
+                    case 8:
+                        label5.ForeColor = Color.Black;
+                        s = label5.Text = "08点截图已保存。";
+                        break;
+                    case 20:
+                        label6.ForeColor = Color.Black;
+                        s = label6.Text = "20点截图已保存。";
+                        break;
+                }
+            }
+            else
+            {
+                switch (J)
+                {
+                    case 8:
+                        label5.ForeColor = Color.Red;
+                        s = label5.Text = "08点截图未保存。";
+                        break;
+                    case 20:
+                        label6.ForeColor = Color.Red;
+                        s = label6.Text = "20点截图未保存";
+                        break;
+                }
+                if (lastddtime != null && lastdd != "")
+                {
+                    if ((DateTime.Now - lastddtime).Hours < 1 && lastdd == s)
+                    {
+
+                    }
+                    else
+                    {
+                        lastdd = s;
+                        string paraUrlCoded = "{\"msgtype\":\"text\",\"text\":{\"content\":\"";
+                        paraUrlCoded += Convert.ToString(J) + "点截图未保存,请检查。";
+                        paraUrlCoded += "\"},\"at\":{\"atMobiles\":[\"";
+                        paraUrlCoded += ph;
+                        paraUrlCoded += "\"],\"isAtAll\": false} }";
+                        //textBox4.Text = paraUrlCoded;
+                        Post(paraUrlCoded);
+                    }
+                }
+                else
+                {
+                    lastdd = s;
+                    string paraUrlCoded = "{\"msgtype\":\"text\",\"text\":{\"content\":\"";
+                    paraUrlCoded += Convert.ToString(J) + "点截图未保存,请检查。";
+                    paraUrlCoded += "\"},\"at\":{\"atMobiles\":[\"";
+                    paraUrlCoded += ph;
+                    paraUrlCoded += "\"],\"isAtAll\": false} }";
+                    //textBox4.Text = paraUrlCoded;
+                    Post(paraUrlCoded);
+                }
+            }
+        }
 
     }
 }
